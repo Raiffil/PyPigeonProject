@@ -1,0 +1,67 @@
+import pygame
+from Skins import load_pigeon_frames
+
+#Initialize pygame
+pygame.init()
+
+WinHeight = 800
+WinWidth = 1500
+
+#Create a window
+screen = pygame.display.set_mode((WinWidth, WinHeight))
+pygame.display.set_caption('Space Pigeon')
+
+#Starting position
+y = 200
+x = 500
+
+#Variables
+frame_index = 0
+animation_speed = 100  #Milliseconds per frame
+last_update = pygame.time.get_ticks()
+animate = True
+
+gravity = 0.2 #How fast it falls
+jump = -150 #How strong the jump is (negative = upward)
+
+BirdWidth = 120
+BirdHeight = 120
+
+#Functions
+pigeon_frames = load_pigeon_frames()
+
+#Main loop
+running = True
+while running:
+    for event in pygame.event.get():  #Check for events
+        if event.type == pygame.QUIT:  #End after pressing X
+            running = False         #End Loop
+            break
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE: #End after pressing Escape
+                running = False
+
+            if event.key == pygame.K_SPACE:
+                y += jump #If Space is pressed → move up
+    y += gravity #Gravity works as long as game is running
+
+    if y < 0: #Prevent falling off the screen
+        y = 0
+    elif y > WinHeight - BirdHeight:
+        y = WinHeight - BirdHeight
+
+    #Animate bird
+    now = pygame.time.get_ticks()
+    if animate:
+        if now - last_update > animation_speed:
+            last_update = now
+            frame_index = (frame_index + 1) % len(pigeon_frames) #Back to 0 after reaching the last frame
+    else:
+        frame_index = 0  #Idle frame
+
+    #Visuals
+    screen.fill((35, 32, 43))  #Background colour
+    pigeon = pigeon_frames[frame_index]
+    screen.blit(pigeon, (x, y))
+
+    pygame.display.flip()         #Update the window
