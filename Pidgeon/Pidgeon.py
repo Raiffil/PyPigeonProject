@@ -1,10 +1,12 @@
 import pygame
+import numpy as np
 from Skins import load_pigeon_frames
+from Skins import load_background
 
 #Initialize pygame
 pygame.init()
 
-WinHeight = 800
+WinHeight = 900
 WinWidth = 1500
 
 #Create a window
@@ -30,6 +32,7 @@ BirdHeight = 120
 
 #Functions
 pigeon_frames = load_pigeon_frames()
+background = load_background()
 
 #Main loop
 running = True
@@ -46,7 +49,8 @@ while running:
                 velocity += jump #If Space is pressed → move up
 
     velocity += gravity  #Gravity works as long as game is running
-    y += velocity  #Speed of bird is stored in velocity to make jump smooth
+    clipped_velocity = np.clip(velocity,-100, 0.8 ) #clip velocity so the gravity is more controlled
+    y += clipped_velocity  #Speed of bird is stored in velocity to make jump smooth
 
     if y < 0: #Prevent falling off the screen
         y = 0
@@ -63,8 +67,9 @@ while running:
         frame_index = 0  #Idle frame
 
     #Visuals
-    screen.fill((35, 32, 43))  #Background colour
+    screen.fill((35, 32, 43))
+    screen.blit(background,(0,0))
     pigeon = pigeon_frames[frame_index]
-    screen.blit(pigeon, (x, y))
+    screen.blit(pigeon,(x,y))
 
     pygame.display.flip()         #Update the window

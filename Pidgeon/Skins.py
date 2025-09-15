@@ -5,6 +5,9 @@ import pygame
 BirdWidth =120
 BirdHeight = 120
 
+WinHeight = 900
+WinWidth = 1500
+
 def load_pigeon_frames():
     return [
         pygame.transform.scale(
@@ -21,3 +24,8 @@ def load_pigeon_frames():
     ),
     ]
 
+def load_background():
+    return pygame.transform.scale(
+    pygame.image.load("Space.png").convert(),
+    (WinWidth, WinHeight)
+)
