@@ -21,8 +21,9 @@ animation_speed = 100  #Milliseconds per frame
 last_update = pygame.time.get_ticks()
 animate = True
 
-gravity = 0.2 #How fast it falls
-jump = -150 #How strong the jump is (negative = upward)
+gravity = 0.003 #How fast it falls
+jump = -1.1 #How strong the jump is (negative = upward)
+velocity = 0
 
 BirdWidth = 120
 BirdHeight = 120
@@ -42,8 +43,10 @@ while running:
                 running = False
 
             if event.key == pygame.K_SPACE:
-                y += jump #If Space is pressed → move up
-    y += gravity #Gravity works as long as game is running
+                velocity += jump #If Space is pressed → move up
+
+    velocity += gravity  #Gravity works as long as game is running
+    y += velocity  #Speed of bird is stored in velocity to make jump smooth
 
     if y < 0: #Prevent falling off the screen
         y = 0
