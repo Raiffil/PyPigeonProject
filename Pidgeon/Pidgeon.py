@@ -33,21 +33,33 @@ BirdHeight = 60
 
 #Objects (pipes)
 obj_width = 100
-obj_height = 600
-obj_gap = 200   # space the bird can fly through
-obj_speed = 3   # how fast they move left
-obj_x = WinWidth
-obj_y = random.randint(100, WinHeight - obj_gap - 100) #defines the top of the gap
-top_obj = pygame.draw.rect(screen, (0,255,0), (obj_x, 0, obj_width, obj_y))
-bottom_obj = pygame.draw.rect(screen, (0,255,0), (obj_x, obj_y + obj_gap, obj_width, WinHeight))
+obj_gap = 300   #Space the bird can fly through
+obj_speed = 0.9     #How fast they move left
+
+#Object spawn timing (ms)
+obj_spawn_interval = 1600   #Time between obj spawns
+last_obj_spawn_time = pygame.time.get_ticks()
+objects = [] #Objects list
+
+#Score
+score = 0
+font = pygame.font.SysFont(None, 48)
 
 #Functions
 pigeon_frames = load_pigeon_frames()
 background = load_background()
 
+def create_obj(x_pos):
+    # choose gap y so gap stays on screen: leave at least 80 px margin
+    min_top = 80
+    max_top = WinHeight - obj_gap - 80
+    gap_y = random.randint(min_top, max_top)
+    return {'x': x_pos, 'gap_y': gap_y, 'passed': False}
+
 #Main loop
 running = True
 while running:
+    now = pygame.time.get_ticks()
     for event in pygame.event.get():  #Check for events
         if event.type == pygame.QUIT:  #End after pressing X
             running = False         #End Loop
@@ -63,12 +75,48 @@ while running:
     clipped_velocity = np.clip(velocity,-100, 1 ) #clip velocity so the gravity is more controlled
     y += clipped_velocity  #Speed of bird is stored in velocity to make jump smooth
 
-    obj_x -= obj_speed
-
     if y < 0: #Prevent falling off the screen
         y = 0
     elif y > WinHeight - BirdHeight:
         y = WinHeight - BirdHeight
+
+    if now - last_obj_spawn_time > obj_spawn_interval:
+        last_obj_spawn_time = now
+        # spawn off the right edge
+        spawn_x = WinWidth + 20
+        objects.append(create_obj(spawn_x))
+
+    bird_rect = pygame.Rect(x, int(y), BirdWidth, BirdHeight) #Bird hitbox
+    new_obj = []
+    for obj in objects:
+        obj['x'] -= obj_speed  #Make objects move left
+
+        # Build the objects
+        top_obj = pygame.Rect(int(obj['x']), 0, obj_width, int(obj['gap_y']))
+        bottom_obj = pygame.Rect(int(obj['x']), int(obj['gap_y'] + obj_gap),
+                                 obj_width, WinHeight - int(obj['gap_y'] + obj_gap))
+
+        # collision check per pipe
+        if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
+            print("Collision! Game over. Score:", score)
+            running = False
+            break
+
+        # Scoring: when object passes the bird's x coordinate
+        if not obj['passed'] and (obj['x'] + obj_width) < x:
+            obj['passed'] = True
+            score += 1
+
+        # Keep the object if it's still on screen (or a bit past left edge)
+        if obj['x'] + obj_width > -50:
+            new_obj.append(obj)
+
+        # Save rects inside the object so we can use them later
+        obj['top_rect'] = top_obj
+        obj['bottom_rect'] = bottom_obj
+
+    # Replace objects list with surviving objects
+    objects = new_obj
 
     #Animate bird
     now = pygame.time.get_ticks()
@@ -82,7 +130,17 @@ while running:
     #Visuals
     screen.fill((35, 32, 43))
     screen.blit(background,(0,0))
+
+    obj_color = (255, 255, 255)
+    for obj in objects:
+        pygame.draw.rect(screen, obj_color, obj['top_rect'])
+        pygame.draw.rect(screen, obj_color, obj['bottom_rect'])
+
     pigeon = pigeon_frames[frame_index]
     screen.blit(pigeon,(x,y))
+
+    #Draw score
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(score_text, (20, 20))
 
     pygame.display.flip()         #Update the window
