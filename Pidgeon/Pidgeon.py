@@ -1,4 +1,5 @@
 import pygame
+import random
 import numpy as np
 from Skins import load_pigeon_frames
 from Skins import load_background
@@ -27,8 +28,18 @@ gravity = 0.003 #How fast it falls
 jump = -1.1 #How strong the jump is (negative = upward)
 velocity = 0
 
-BirdWidth = 120
-BirdHeight = 120
+BirdWidth = 60
+BirdHeight = 60
+
+#Objects (pipes)
+obj_width = 100
+obj_height = 600
+obj_gap = 200   # space the bird can fly through
+obj_speed = 3   # how fast they move left
+obj_x = WinWidth
+obj_y = random.randint(100, WinHeight - obj_gap - 100) #defines the top of the gap
+top_obj = pygame.draw.rect(screen, (0,255,0), (obj_x, 0, obj_width, obj_y))
+bottom_obj = pygame.draw.rect(screen, (0,255,0), (obj_x, obj_y + obj_gap, obj_width, WinHeight))
 
 #Functions
 pigeon_frames = load_pigeon_frames()
@@ -49,8 +60,10 @@ while running:
                 velocity += jump #If Space is pressed → move up
 
     velocity += gravity  #Gravity works as long as game is running
-    clipped_velocity = np.clip(velocity,-100, 0.8 ) #clip velocity so the gravity is more controlled
+    clipped_velocity = np.clip(velocity,-100, 1 ) #clip velocity so the gravity is more controlled
     y += clipped_velocity  #Speed of bird is stored in velocity to make jump smooth
+
+    obj_x -= obj_speed
 
     if y < 0: #Prevent falling off the screen
         y = 0

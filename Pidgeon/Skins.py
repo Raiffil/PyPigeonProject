@@ -2,8 +2,8 @@ import pygame
 
 # Load and scale bird images
 
-BirdWidth =120
-BirdHeight = 120
+BirdWidth = 60
+BirdHeight = 60
 
 WinHeight = 900
 WinWidth = 1500
