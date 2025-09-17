@@ -31,3 +31,9 @@ def load_menu_image():
     return pygame.transform.scale(
         pygame.image.load("SpaceMenu.png").convert(),
         (WinWidth, WinHeight))
+
+def load_restart_image():
+    return pygame.transform.scale(
+        pygame.image.load("SpaceGameOver.png").convert(),
+        (WinWidth, WinHeight))
+

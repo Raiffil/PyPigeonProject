@@ -5,6 +5,7 @@ import numpy as np
 from Skins import load_menu_image
 from Skins import load_pigeon_frames
 from Skins import load_background
+from Skins import load_restart_image
 
 #Initialize pygame
 pygame.init()
@@ -41,6 +42,13 @@ start_btn = pygame.Rect(540, 350, 420, 140)
 shop_btn  = pygame.Rect(540, 520, 420, 140)
 quit_btn  = pygame.Rect(540, 685, 420, 140)
 
+#Game over button rects
+restart_btn = pygame.Rect(750, 575, 300, 100)
+menu_btn    = pygame.Rect(450, 575, 300, 100)
+
+# High score placeholder
+high_score = ":D"
+
 def reset_game():
     global x, y, velocity, objects, score, last_obj_spawn_time, frame_index
     global last_update, animate
@@ -61,6 +69,7 @@ reset_game()
 pigeon_frames = load_pigeon_frames()
 background = load_background()
 menu_image = load_menu_image()
+restart_image = load_restart_image()
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
@@ -93,6 +102,15 @@ while running:
                     state = "menu" #Go back to menu on ESC
                 if event.key == pygame.K_SPACE:
                     velocity += jump  #If Space is pressed → move up
+
+        elif state == "restart":
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mx, my = event.pos
+                if restart_btn.collidepoint(mx, my):
+                    reset_game()
+                    state = "game"
+                elif menu_btn.collidepoint(mx, my):
+                    state = "menu"
 
     if state == 'menu':
         screen.blit(menu_image, (0, 0))
@@ -127,7 +145,7 @@ while running:
             #Collision check per pipe
             if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
                 print("Collision! Game over. Score:", score)
-                state = "menu"
+                state = "restart"
                 break
 
             #When object passes the bird's x coordinate get a point
@@ -169,6 +187,19 @@ while running:
 
         #Draw score
         score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-        screen.blit(score_text, (20, 20))
+        screen.blit(score_text, (40, 40))
+
+
+    elif state == "restart":
+        screen.blit(restart_image,(0, 0))
+        # Debug temp buttons rects part2
+        pygame.draw.rect(screen, (255, 0, 0), restart_btn, 2)
+        pygame.draw.rect(screen, (0, 255, 0), menu_btn, 2)
+
+        # Show scores
+        score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+        high_text  = font.render(f"High Score: {high_score}", True, (255, 255, 255))
+        screen.blit(score_text, (650, 250))
+        screen.blit(high_text, (650, 300))
 
     pygame.display.flip()         #Update the window
