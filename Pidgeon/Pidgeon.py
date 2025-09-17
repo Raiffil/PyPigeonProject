@@ -34,11 +34,8 @@ BirdHeight = 60
 #Objects (pipes)
 obj_width = 100
 obj_speed = 1.2     #How fast they move left
-obj_gap = 250
-
-#min_gap = 200
-#max_gap = 400
-#obj_gap = random.randint(min_gap, max_gap) #Space the bird can fly through
+min_gap = 200
+max_gap = 350
 
 #Object spawn timing (ms)
 obj_spawn_interval = 800   #Time between obj spawns
@@ -54,10 +51,11 @@ pigeon_frames = load_pigeon_frames()
 background = load_background()
 
 def create_obj(x_pos):
-    min_top = 80  #Makes the gap in random y
-    max_top = WinHeight - obj_gap - 80
+    gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
+    min_top = 80
+    max_top = WinHeight - gap_size - 80
     gap_y = random.randint(min_top, max_top)
-    return {'x': x_pos, 'gap_y': gap_y, 'passed': False}
+    return {'x': x_pos,'gap_y': gap_y,'gap_size': gap_size,'passed': False}
 
 #Main loop
 running = True
@@ -95,7 +93,7 @@ while running:
 
         #Draw the objects
         top_obj = pygame.Rect(int(obj['x']), 0, obj_width, int(obj['gap_y']))
-        bottom_obj = pygame.Rect(int(obj['x']), int(obj['gap_y'] + obj_gap), obj_width, WinHeight - int(obj['gap_y'] + obj_gap))
+        bottom_obj = pygame.Rect(int(obj['x']), int(obj['gap_y'] + obj['gap_size']), obj_width, WinHeight - int(obj['gap_y'] + obj['gap_size']))
 
         #Collision check per pipe
         if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
