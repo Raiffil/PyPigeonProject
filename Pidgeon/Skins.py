@@ -26,3 +26,8 @@ def load_background():
     return pygame.transform.scale(
     pygame.image.load("Space.png").convert(),
     (WinWidth, WinHeight))
+
+def load_menu_image():
+    return pygame.transform.scale(
+        pygame.image.load("SpaceMenu.png").convert(),
+        (WinWidth, WinHeight))
