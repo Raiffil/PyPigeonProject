@@ -1,6 +1,7 @@
 import pygame
 import random
 import numpy as np
+import os
 
 from Skins import load_menu_image
 from Skins import load_pigeon_frames
@@ -9,6 +10,22 @@ from Skins import load_restart_image
 
 #Initialize pygame
 pygame.init()
+
+#Saving highscore
+def load_high_score():
+    #Load high score from file, or return 0 if no file exists
+    if os.path.exists("highscore.txt"):
+        with open("highscore.txt", "r") as f:
+            try:
+                return int(f.read().strip())
+            except ValueError:
+                return 0
+    return 0
+
+def save_high_score(score):
+    #Save high score to file.
+    with open("highscore.txt", "w") as f:
+        f.write(str(score))
 
 #Create a window
 WinHeight = 900
@@ -31,7 +48,8 @@ max_gap = 350
 obj_spawn_interval = 800         #800 or 1000  #Time between obj spawns
 
 #Font
-font = pygame.font.SysFont(None, 50)
+font1 = pygame.font.SysFont(None, 40)
+font2 = pygame.font.SysFont(None, 150)
 
 #Menu
 state = "menu"
@@ -45,9 +63,6 @@ quit_btn  = pygame.Rect(540, 685, 420, 140)
 #Game over button rects
 restart_btn = pygame.Rect(790, 565, 420, 140)
 menu_btn    = pygame.Rect(290, 565, 420, 140)
-
-#High score placeholder
-high_score = "X"
 
 def reset_game():
     global x, y, velocity, objects, score, last_obj_spawn_time, frame_index
@@ -65,11 +80,12 @@ def reset_game():
 
 reset_game()
 
-#Assets
+#Functions
 pigeon_frames = load_pigeon_frames()
 background = load_background()
 menu_image = load_menu_image()
 restart_image = load_restart_image()
+high_score = load_high_score()
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
@@ -145,6 +161,9 @@ while running:
             #Collision check per pipe
             if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
                 print("Collision! Game over. Score:", score)
+                if score > high_score:
+                    high_score = score
+                    save_high_score(high_score)  #Write new high score to file
                 state = "restart"
                 break
 
@@ -186,20 +205,20 @@ while running:
         screen.blit(pigeon,(x,y))
 
         #Draw score
-        score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+        score_text = font1.render(f"Score: {score}", True, (255, 255, 255))
         screen.blit(score_text, (40, 40))
 
 
     elif state == "restart":
         screen.blit(restart_image,(0, 0))
-        # Debug temp buttons rects part2
+        #Debug temp buttons rects part2
         #pygame.draw.rect(screen, (255, 0, 0), restart_btn, 2)
         #pygame.draw.rect(screen, (0, 255, 0), menu_btn, 2)
 
-        # Show scores
-        score_text = font.render(f" {score}", True, (255, 255, 255))
-        high_text  = font.render(f" {high_score}", True, (255, 255, 255)) #(71, 37, 114)
-        screen.blit(score_text, (1085, 440))
-        screen.blit(high_text, (605, 440))
+        #Show scores
+        score_text = font2.render(f" {score}", True, (71, 37, 114))
+        high_text  = font2.render(f" {high_score}", True, (71, 37, 114))
+        screen.blit(score_text, (960, 410))
+        screen.blit(high_text, (530, 410))
 
     pygame.display.flip()         #Update the window
