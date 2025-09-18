@@ -25,13 +25,13 @@ BirdHeight = 60
 
 #Objects (pipes)
 obj_width = 100
-obj_speed = 1.2     #How fast they move left
+obj_speed = 1.2       #1.2 or 0.8 #how fast they move left
 min_gap = 200
 max_gap = 350
-obj_spawn_interval = 800   #Time between obj spawns
+obj_spawn_interval = 800         #800 or 1000  #Time between obj spawns
 
 #Font
-font = pygame.font.SysFont(None, 48)
+font = pygame.font.SysFont(None, 50)
 
 #Menu
 state = "menu"
@@ -43,11 +43,11 @@ shop_btn  = pygame.Rect(540, 520, 420, 140)
 quit_btn  = pygame.Rect(540, 685, 420, 140)
 
 #Game over button rects
-restart_btn = pygame.Rect(750, 575, 300, 100)
-menu_btn    = pygame.Rect(450, 575, 300, 100)
+restart_btn = pygame.Rect(790, 565, 420, 140)
+menu_btn    = pygame.Rect(290, 565, 420, 140)
 
-# High score placeholder
-high_score = ":D"
+#High score placeholder
+high_score = "X"
 
 def reset_game():
     global x, y, velocity, objects, score, last_obj_spawn_time, frame_index
@@ -115,9 +115,9 @@ while running:
     if state == 'menu':
         screen.blit(menu_image, (0, 0))
         #Debug temp rects
-        pygame.draw.rect(screen, (255, 0, 0), start_btn, 2)
-        pygame.draw.rect(screen, (0,255,0), shop_btn, 2)
-        pygame.draw.rect(screen, (0,0,255), quit_btn, 2)
+        #pygame.draw.rect(screen, (255, 0, 0), start_btn, 2)
+        #pygame.draw.rect(screen, (0,255,0), shop_btn, 2)
+        #pygame.draw.rect(screen, (0,0,255), quit_btn, 2)
 
     elif state == "game":
         velocity += gravity  #Gravity works as long as game is running
@@ -193,13 +193,13 @@ while running:
     elif state == "restart":
         screen.blit(restart_image,(0, 0))
         # Debug temp buttons rects part2
-        pygame.draw.rect(screen, (255, 0, 0), restart_btn, 2)
-        pygame.draw.rect(screen, (0, 255, 0), menu_btn, 2)
+        #pygame.draw.rect(screen, (255, 0, 0), restart_btn, 2)
+        #pygame.draw.rect(screen, (0, 255, 0), menu_btn, 2)
 
         # Show scores
-        score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-        high_text  = font.render(f"High Score: {high_score}", True, (255, 255, 255))
-        screen.blit(score_text, (650, 250))
-        screen.blit(high_text, (650, 300))
+        score_text = font.render(f" {score}", True, (255, 255, 255))
+        high_text  = font.render(f" {high_score}", True, (255, 255, 255)) #(71, 37, 114)
+        screen.blit(score_text, (1085, 440))
+        screen.blit(high_text, (605, 440))
 
     pygame.display.flip()         #Update the window
