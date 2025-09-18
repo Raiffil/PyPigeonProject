@@ -42,10 +42,17 @@ BirdHeight = 60
 
 #Objects (pipes)
 obj_width = 100
-obj_speed = 1.2       #1.2 or 0.8 #how fast they move left
 min_gap = 200
 max_gap = 350
-obj_spawn_interval = 800         #800 or 1000  #Time between obj spawns
+
+base_obj_speed = 0.8          # Starting pipe speed
+max_obj_speed = 3.0           # Maximum pipe speed
+
+base_obj_spawn_interval = 1000 # Starting time between pipes (ms)
+min_spawn_interval = 400      # Minimum time between pipes
+
+speed_increment = 0.05        # How much speed increases per point
+interval_decrement = 20        # How much spawn interval decreases per point
 
 #Font
 font1 = pygame.font.SysFont(None, 40)
@@ -144,6 +151,11 @@ while running:
 
     elif state == "game":
         if not game_ready:
+            #Make the game harder over time
+            obj_speed = min(base_obj_speed + score * speed_increment, max_obj_speed)
+            obj_spawn_interval = max(base_obj_spawn_interval - score * interval_decrement, min_spawn_interval)
+
+            #Bird physics
             velocity += gravity  #Gravity works as long as game is running
             clipped_velocity = np.clip(velocity, -100, 1)  #Clip velocity so the gravity is more controlled
             y += clipped_velocity  #Speed of bird is stored in velocity to make jump smoother
@@ -168,7 +180,6 @@ while running:
 
                 #Collision check per pipe
                 if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
-                    print("Collision! Game over. Score:", score)
                     if score > high_score:
                         high_score = score
                         save_high_score(high_score)  #Write new high score to file
