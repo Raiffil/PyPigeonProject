@@ -27,6 +27,22 @@ def save_high_score(score):
     with open("highscore.txt", "w") as f:
         f.write(str(score))
 
+def load_stardust():
+    #Load stardust from file, or return 0 if no file exists
+    if os.path.exists("stardust.txt"):
+        with open("stardust.txt", "r") as f:
+            try:
+                return int(f.read().strip())
+            except ValueError:
+                return 0
+    return 0
+
+def save_stardust(amount):
+    #Save stardust to file
+    with open("stardust.txt", "w") as f:
+        f.write(str(amount))
+
+
 #Create a window
 WinHeight = 900
 WinWidth = 1500
@@ -39,20 +55,23 @@ gravity = 0.005 #How fast the bird falls
 jump = -1.2  #How strong the jump is (negative = upward)
 BirdWidth = 60
 BirdHeight = 60
+star_size = 40
+star_chance = 0.4   #Chance a star spawns in a gap
+stars = []          #Active star list
 
 #Objects (pipes)
 obj_width = 100
 min_gap = 200
 max_gap = 350
 
-base_obj_speed = 0.8          # Starting pipe speed
-max_obj_speed = 3.0           # Maximum pipe speed
+base_obj_speed = 0.8          #Starting object speed
+max_obj_speed = 3.0           #Maximum object speed
 
-base_obj_spawn_interval = 1000 # Starting time between pipes (ms)
-min_spawn_interval = 400      # Minimum time between pipes
+base_obj_spawn_interval = 1000 #Spawning time between objects (ms)
+min_spawn_interval = 400      #Minimum time between objects
 
-speed_increment = 0.05        # How much speed increases per point
-interval_decrement = 20        # How much spawn interval decreases per point
+speed_increment = 0.05        #How much speed increases per point
+interval_decrement = 20        #How much spawn interval decreases per point
 
 #Font
 font1 = pygame.font.SysFont(None, 40)
@@ -73,7 +92,7 @@ menu_btn    = pygame.Rect(290, 565, 420, 140)
 
 def reset_game():
     global x, y, velocity, objects, score, last_obj_spawn_time, frame_index
-    global last_update, animate, game_ready
+    global last_update, animate, game_ready, stars
 
     y = 200 #Starting position
     x = 500
@@ -85,6 +104,7 @@ def reset_game():
     last_update = pygame.time.get_ticks()
     animate = True
     game_ready = True #True when waiting for first jump
+    stars = []
 
 reset_game()
 
@@ -94,12 +114,17 @@ background = load_background()
 menu_image = load_menu_image()
 restart_image = load_restart_image()
 high_score = load_high_score()
+#star_image =
+stardust = load_stardust()
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
     min_top = 80
     max_top = WinHeight - gap_size - 80
     gap_y = random.randint(min_top, max_top)
+    if random.random() < star_chance:
+        star_y = gap_y + gap_size // 2 - star_size // 2
+        stars.append({'x': x_pos + obj_width // 2 - star_size // 2, 'y': star_y, 'collected': False})
     return {'x': x_pos,'gap_y': gap_y,'gap_size': gap_size,'passed': False}
 
 #Main loop
@@ -107,6 +132,7 @@ while running:
     now = pygame.time.get_ticks()
     for event in pygame.event.get():  #Check for events
         if event.type == pygame.QUIT:  #End after pressing X
+            save_stardust(stardust)  #Save stardust before quitting
             running = False         #End Loop
 
         if state == 'menu':
@@ -123,15 +149,14 @@ while running:
 
         elif state == 'game':
             if event.type == pygame.KEYDOWN:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        state = "menu" #Go back to menu on ESC
-                    if event.key == pygame.K_SPACE:
-                        if game_ready:
-                            game_ready = False
-                            velocity += jump  #If Space is pressed → move up
-                        else:
-                            velocity += jump
+                if event.key == pygame.K_ESCAPE:
+                    state = "menu" #Go back to menu on ESC
+                if event.key == pygame.K_SPACE:
+                    if game_ready:
+                        game_ready = False
+                        velocity += jump  #If Space is pressed → move up
+                    else:
+                        velocity += jump
 
         elif state == "restart":
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -178,7 +203,7 @@ while running:
                 top_obj = pygame.Rect(int(obj['x']), 0, obj_width, int(obj['gap_y']))
                 bottom_obj = pygame.Rect(int(obj['x']), int(obj['gap_y'] + obj['gap_size']), obj_width, WinHeight - int(obj['gap_y'] + obj['gap_size']))
 
-                #Collision check per pipe
+                #Collision check per object
                 if bird_rect.colliderect(top_obj) or bird_rect.colliderect(bottom_obj):
                     if score > high_score:
                         high_score = score
@@ -202,6 +227,24 @@ while running:
             #Replace objects list with surviving objects
             objects = new_obj
 
+        #Stars
+        new_stars = []
+        for star in stars:
+            star['x'] -= obj_speed  #Move with objects
+            star_rect = pygame.Rect(star['x'], star['y'], star_size, star_size)
+
+            #Check collision with bird
+            if not star['collected'] and bird_rect.colliderect(star_rect):
+                star['collected'] = True
+                stardust += 1
+                save_stardust(stardust) #Saves to file
+
+             #Keep star if still on screen and not collected
+            if star['x'] > -star_size and not star['collected']:
+                new_stars.append(star)
+
+        stars = new_stars
+
         #Animate bird
         now = pygame.time.get_ticks()
         if animate:
@@ -215,10 +258,22 @@ while running:
         screen.fill((35, 32, 43))
         screen.blit(background,(0,0))
 
+        #Draw objects
         obj_color = (255, 255, 255)
         for obj in objects:
             pygame.draw.rect(screen, obj_color, obj['top_rect'])
             pygame.draw.rect(screen, obj_color, obj['bottom_rect'])
+
+        #Draw stars
+        for star in stars:
+            #screen.blit(star_img, (star['x'], star['y']))
+
+            #Temp circle
+            pygame.draw.circle(screen, (255, 215, 0), (star['x'] + star_size//2, star['y'] + star_size//2), star_size//2)
+
+        #Show stardust
+        stardust_text = font1.render(f"Stardust: {stardust}", True, (255, 223, 0))
+        screen.blit(stardust_text, (40, 80))
 
         pigeon = pigeon_frames[frame_index]
         screen.blit(pigeon,(x,y))
