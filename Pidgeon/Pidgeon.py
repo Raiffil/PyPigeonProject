@@ -7,6 +7,12 @@ from Skins import load_menu_image
 from Skins import load_pigeon_frames
 from Skins import load_background
 from Skins import load_restart_image
+from Skins import load_star_image
+from Skins import load_shop_image
+from Skins import load_bird1
+from Skins import load_bird2
+from Skins import load_bird3
+from Skins import load_bird4
 
 #Initialize pygame
 pygame.init()
@@ -55,7 +61,7 @@ gravity = 0.005 #How fast the bird falls
 jump = -1.2  #How strong the jump is (negative = upward)
 BirdWidth = 60
 BirdHeight = 60
-star_size = 40
+star_size = 50
 star_chance = 0.4   #Chance a star spawns in a gap
 stars = []          #Active star list
 
@@ -77,8 +83,8 @@ interval_decrement = 20        #How much spawn interval decreases per point
 font1 = pygame.font.SysFont(None, 40)
 font2 = pygame.font.SysFont(None, 150)
 
-#Menu
-state = "menu"
+#Game start
+state = "shop"
 running = True
 
 #Menu button rects
@@ -90,9 +96,28 @@ quit_btn  = pygame.Rect(540, 685, 420, 140)
 restart_btn = pygame.Rect(790, 565, 420, 140)
 menu_btn    = pygame.Rect(290, 565, 420, 140)
 
+#Shop button rects
+shop_start_btn = pygame.Rect(885, 620, 420, 140)
+shop_menu_btn = pygame.Rect(185, 620, 420, 140)
+
+#Skin selection slots in shop
+skin_slots = [
+    pygame.Rect(195, 395, 200, 200),  # Slot 0: animated pigeon
+    pygame.Rect(420, 395, 200, 200),  # Slot 1: bird1
+    pygame.Rect(645, 395, 200, 200),  # Slot 2: bird2
+    pygame.Rect(875, 395, 200, 200),  # Slot 3: bird3
+    pygame.Rect(1100, 395, 200, 200)  # Slot 4: bird4
+]
+
+# Preview slot for currently selected skin
+preview_slot = pygame.Rect(195, 160, 200, 200)
+
+selected_skin = 0  # Default: animated pigeon
+
+
 def reset_game():
     global x, y, velocity, objects, score, last_obj_spawn_time, frame_index
-    global last_update, animate, game_ready, stars
+    global last_update, animate, game_waiting, stars
 
     y = 200 #Starting position
     x = 500
@@ -103,7 +128,7 @@ def reset_game():
     frame_index = 0
     last_update = pygame.time.get_ticks()
     animate = True
-    game_ready = True #True when waiting for first jump
+    game_waiting = True #True when waiting for first jump
     stars = []
 
 reset_game()
@@ -114,8 +139,15 @@ background = load_background()
 menu_image = load_menu_image()
 restart_image = load_restart_image()
 high_score = load_high_score()
-#star_image =
+star_image = load_star_image()
 stardust = load_stardust()
+shop_image = load_shop_image()
+bird1 = load_bird1()
+bird2 = load_bird2()
+bird3 = load_bird3()
+bird4 = load_bird4()
+
+static_birds = [bird1, bird2, bird3, bird4]   #Static images used in shop
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
@@ -136,14 +168,14 @@ while running:
             running = False         #End Loop
 
         if state == 'menu':
-            game_ready = False
+            game_waiting = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
                 if start_btn.collidepoint(mx, my):
                     reset_game()
                     state = "game"
                 elif shop_btn.collidepoint(mx, my):
-                    print("Shop not implemented yet")
+                    state = "shop"
                 elif quit_btn.collidepoint(mx, my):
                     running = False
 
@@ -152,13 +184,13 @@ while running:
                 if event.key == pygame.K_ESCAPE:
                     state = "menu" #Go back to menu on ESC
                 if event.key == pygame.K_SPACE:
-                    if game_ready:
-                        game_ready = False
+                    if game_waiting:
+                        game_waiting = False
                         velocity += jump  #If Space is pressed → move up
                     else:
                         velocity += jump
 
-        elif state == "restart":
+        elif state == 'restart':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
                 if restart_btn.collidepoint(mx, my):
@@ -166,8 +198,29 @@ while running:
                     state = "game"
                 elif menu_btn.collidepoint(mx, my):
                     state = "menu"
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = "menu"
 
-    if state == 'menu':
+        elif state == 'shop':
+            game_waiting = False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mx, my = event.pos
+                if shop_start_btn.collidepoint(mx, my):
+                    reset_game()
+                    state = "game"
+                elif shop_menu_btn.collidepoint(mx, my):
+                    state = "menu"
+                for i, rect in enumerate(skin_slots):
+                    if rect.collidepoint(mx, my):
+                        selected_skin = i
+                        break
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = "menu"
+
+
+    if state == "menu":
         screen.blit(menu_image, (0, 0))
         #Debug temp rects
         #pygame.draw.rect(screen, (255, 0, 0), start_btn, 2)
@@ -175,7 +228,7 @@ while running:
         #pygame.draw.rect(screen, (0,0,255), quit_btn, 2)
 
     elif state == "game":
-        if not game_ready:
+        if not game_waiting:
             #Make the game harder over time
             obj_speed = min(base_obj_speed + score * speed_increment, max_obj_speed)
             obj_spawn_interval = max(base_obj_spawn_interval - score * interval_decrement, min_spawn_interval)
@@ -266,17 +319,21 @@ while running:
 
         #Draw stars
         for star in stars:
-            #screen.blit(star_img, (star['x'], star['y']))
-
-            #Temp circle
-            pygame.draw.circle(screen, (255, 215, 0), (star['x'] + star_size//2, star['y'] + star_size//2), star_size//2)
+            screen.blit(star_image, (star['x'], star['y']))
 
         #Show stardust
-        stardust_text = font1.render(f"Stardust: {stardust}", True, (255, 223, 0))
+        stardust_text = font1.render(f"Stardust: {stardust}", True, (255, 255, 255))
         screen.blit(stardust_text, (40, 80))
 
-        pigeon = pigeon_frames[frame_index]
-        screen.blit(pigeon,(x,y))
+        #Draw the selected bird
+        if selected_skin == 0:
+            #Animated pigeon if slot 0 is selected
+            pigeon_img = pigeon_frames[frame_index]
+        else:
+            #Static bird from shop selection
+            pigeon_img = static_birds[selected_skin - 1]
+
+        screen.blit(pygame.transform.scale(pigeon_img, (BirdWidth, BirdHeight)), (x, y))
 
         #Draw score
         score_text = font1.render(f"Score: {score}", True, (255, 255, 255))
@@ -295,9 +352,35 @@ while running:
         screen.blit(score_text, (960, 410))
         screen.blit(high_text, (530, 410))
 
+    elif state == "shop":
+        game_waiting = False
+        screen.blit(shop_image, (0, 0))
+
+        #Draw stardust counter
+        stardust_text = font2.render(f"{stardust}", True, (255, 255, 255))
+        screen.blit(stardust_text, (950, 220))
+
+        #Draw skin selection slots
+        for i, rect in enumerate(skin_slots):
+            img = pigeon_frames[0] if i == 0 else static_birds[i - 1]
+            screen.blit(pygame.transform.scale(img, (rect.width, rect.height)), rect.topleft)
+
+            #Debug temp frame
+            #pygame.draw.rect(screen, (255, 255, 255), rect, 2)
+
+        #Draw preview of currently selected skin
+        preview_img = pigeon_frames[0] if selected_skin == 0 else static_birds[selected_skin - 1]
+        screen.blit(pygame.transform.scale(preview_img, (preview_slot.width, preview_slot.height)),
+                    preview_slot.topleft)
+        #pygame.draw.rect(screen, (0, 255, 255), preview_slot, 4)  #Debug temp border
+
+        #Debug temp buttons rects part3
+        #pygame.draw.rect(screen, (255, 0, 0), shop_start_btn, 2)
+        #pygame.draw.rect(screen, (0, 255, 0), shop_menu_btn, 2)
+
     #Press space to start
-    if game_ready:
-        ready_text = font2.render("Press SPACE to start", True, (255, 255, 255))
-        screen.blit(ready_text, (WinWidth // 2 - ready_text.get_width() // 2, 400))
+    if game_waiting:
+        waiting_text = font2.render("Press SPACE to start", True, (255, 255, 255))
+        screen.blit(waiting_text, (WinWidth // 2 - waiting_text.get_width() // 2, 400))
 
     pygame.display.flip()         #Update the window

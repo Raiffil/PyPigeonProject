@@ -8,6 +8,8 @@ BirdHeight = 60
 WinHeight = 900
 WinWidth = 1500
 
+star_size = 50
+
 def load_pigeon_frames():
     return [
         pygame.transform.scale(
@@ -37,3 +39,24 @@ def load_restart_image():
         pygame.image.load("SpaceGameOver.png").convert(),
         (WinWidth, WinHeight))
 
+def load_star_image():
+    return pygame.transform.scale(
+        pygame.image.load("Star.png").convert_alpha(),
+        (star_size, star_size))
+
+def load_shop_image():
+    return pygame.transform.scale(
+        pygame.image.load("SpaceShop.png").convert(),
+        (WinWidth, WinHeight))
+
+def load_bird1():
+    return pygame.image.load("bird1.png").convert_alpha()
+
+def load_bird2():
+    return pygame.image.load("bird2.png").convert_alpha()
+
+def load_bird3():
+    return pygame.image.load("bird3.png").convert_alpha()
+
+def load_bird4():
+    return pygame.image.load("bird4.png").convert_alpha()
