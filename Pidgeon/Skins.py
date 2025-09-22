@@ -60,3 +60,16 @@ def load_bird3():
 
 def load_bird4():
     return pygame.image.load("bird4.png").convert_alpha()
+
+
+def load_gate1():
+    return pygame.image.load("gate1.png").convert_alpha()
+
+def load_gate2():
+    return pygame.image.load("gate2.png").convert_alpha()
+
+def load_gate3():
+    return pygame.image.load("gate3.png").convert_alpha()
+
+def load_gate4():
+    return pygame.image.load("gate4.png").convert_alpha()

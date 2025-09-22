@@ -9,10 +9,8 @@ from Skins import load_background
 from Skins import load_restart_image
 from Skins import load_star_image
 from Skins import load_shop_image
-from Skins import load_bird1
-from Skins import load_bird2
-from Skins import load_bird3
-from Skins import load_bird4
+from Skins import load_bird1, load_bird2, load_bird3, load_bird4
+from Skins import load_gate1, load_gate2, load_gate3, load_gate4
 
 #Initialize pygame
 pygame.init()
@@ -65,6 +63,10 @@ star_size = 50
 star_chance = 0.4   #Chance a star spawns in a gap
 stars = []          #Active star list
 
+#Lock gates in shop
+unlocked_slots = [True, False, False, False, False]  #Slot 0 always unlocked
+lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
+
 #Objects (pipes)
 obj_width = 100
 min_gap = 200
@@ -84,7 +86,7 @@ font1 = pygame.font.SysFont(None, 40)
 font2 = pygame.font.SysFont(None, 150)
 
 #Game start
-state = "shop"
+state = "menu"
 running = True
 
 #Menu button rects
@@ -102,15 +104,15 @@ shop_menu_btn = pygame.Rect(185, 620, 420, 140)
 
 #Skin selection slots in shop
 skin_slots = [
-    pygame.Rect(195, 395, 200, 200),  # Slot 0: animated pigeon
-    pygame.Rect(420, 395, 200, 200),  # Slot 1: bird1
-    pygame.Rect(645, 395, 200, 200),  # Slot 2: bird2
-    pygame.Rect(875, 395, 200, 200),  # Slot 3: bird3
-    pygame.Rect(1100, 395, 200, 200)  # Slot 4: bird4
+    pygame.Rect(195, 392, 200, 200),  # Slot 0: animated pigeon
+    pygame.Rect(420, 392, 200, 200),  # Slot 1: bird1
+    pygame.Rect(645, 392, 200, 200),  # Slot 2: bird2
+    pygame.Rect(875, 392, 200, 200),  # Slot 3: bird3
+    pygame.Rect(1100, 392, 200, 200)  # Slot 4: bird4
 ]
 
 # Preview slot for currently selected skin
-preview_slot = pygame.Rect(195, 160, 200, 200)
+preview_slot = pygame.Rect(192, 160, 200, 200)
 
 selected_skin = 0  # Default: animated pigeon
 
@@ -146,8 +148,14 @@ bird1 = load_bird1()
 bird2 = load_bird2()
 bird3 = load_bird3()
 bird4 = load_bird4()
+gate1 = load_gate1()
+gate2 = load_gate2()
+gate3 = load_gate3()
+gate4 = load_gate4()
 
+#Variables tied to functions
 static_birds = [bird1, bird2, bird3, bird4]   #Static images used in shop
+lock_images = [None, gate1, gate2, gate3, gate4]  #Slot 0 has no lock
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
@@ -213,7 +221,14 @@ while running:
                     state = "menu"
                 for i, rect in enumerate(skin_slots):
                     if rect.collidepoint(mx, my):
-                        selected_skin = i
+                        if unlocked_slots[i]:
+                            selected_skin = i
+                        elif stardust >= lock_costs[i]:
+                            #Spend stardust and unlock slot
+                            stardust -= lock_costs[i]
+                            save_stardust(stardust)
+                            unlocked_slots[i] = True
+                            selected_skin = i
                         break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -364,6 +379,11 @@ while running:
         for i, rect in enumerate(skin_slots):
             img = pigeon_frames[0] if i == 0 else static_birds[i - 1]
             screen.blit(pygame.transform.scale(img, (rect.width, rect.height)), rect.topleft)
+
+            #Draw lock overlay if slot is still locked
+            if not unlocked_slots[i] and i != 0:
+                lock_img_scaled = pygame.transform.scale(lock_images[i], (rect.width, rect.height))
+                screen.blit(lock_img_scaled, rect.topleft)
 
             #Debug temp frame
             #pygame.draw.rect(screen, (255, 255, 255), rect, 2)
