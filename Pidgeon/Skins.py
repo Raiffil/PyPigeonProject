@@ -49,14 +49,22 @@ def load_shop_image():
         pygame.image.load("SpaceShop.png").convert(),
         (WinWidth, WinHeight))
 
-def load_bird1():
-    return pygame.image.load("bird1.png").convert_alpha()
+def load_bird1_frames():
+    frames = []
+    for i in range(1, 5):
+        frame = pygame.image.load(f"Bird1_F{i}.png").convert_alpha()
+        frames.append(frame)
+    return frames
 
 def load_bird2():
     return pygame.image.load("bird2.png").convert_alpha()
 
-def load_bird3():
-    return pygame.image.load("bird3.png").convert_alpha()
+def load_bird3_frames():
+    frames = []
+    for i in range(1, 5):
+        frame = pygame.image.load(f"Bird3_F{i}.png").convert_alpha()
+        frames.append(frame)
+    return frames
 
 def load_bird4():
     return pygame.image.load("bird4.png").convert_alpha()

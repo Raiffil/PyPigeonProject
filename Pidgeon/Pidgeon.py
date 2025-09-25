@@ -9,7 +9,7 @@ from Skins import load_background
 from Skins import load_restart_image
 from Skins import load_star_image
 from Skins import load_shop_image
-from Skins import load_bird1, load_bird2, load_bird3, load_bird4
+from Skins import load_bird1_frames, load_bird2, load_bird3_frames, load_bird4
 from Skins import load_gate1, load_gate2, load_gate3, load_gate4
 
 #Initialize pygame
@@ -65,7 +65,8 @@ stars = []          #Active star list
 
 #Lock gates in shop
 unlocked_slots = [True, False, False, False, False]  #Slot 0 always unlocked
-lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
+#lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
+lock_costs = [0, 1, 1, 1, 1]  #Temp debug costs
 
 #Objects (pipes)
 obj_width = 100
@@ -104,7 +105,7 @@ shop_menu_btn = pygame.Rect(185, 620, 420, 140)
 
 #Skin selection slots in shop
 skin_slots = [
-    pygame.Rect(195, 392, 200, 200),  # Slot 0: animated pigeon
+    pygame.Rect(195, 392, 200, 200),  # Slot 0: pigeon
     pygame.Rect(420, 392, 200, 200),  # Slot 1: bird1
     pygame.Rect(645, 392, 200, 200),  # Slot 2: bird2
     pygame.Rect(875, 392, 200, 200),  # Slot 3: bird3
@@ -144,17 +145,20 @@ high_score = load_high_score()
 star_image = load_star_image()
 stardust = load_stardust()
 shop_image = load_shop_image()
-bird1 = load_bird1()
+bird1 = load_bird1_frames()
+#bird2 = load_bird2_frames()
 bird2 = load_bird2()
-bird3 = load_bird3()
+bird3 = load_bird3_frames()
 bird4 = load_bird4()
 gate1 = load_gate1()
 gate2 = load_gate2()
 gate3 = load_gate3()
 gate4 = load_gate4()
+obj_image = pygame.image.load("Rocket.png").convert_alpha()
+
 
 #Variables tied to functions
-static_birds = [bird1, bird2, bird3, bird4]   #Static images used in shop
+static_birds = [bird1[0], bird2, bird3[0], bird4] #Static images used in shop
 lock_images = [None, gate1, gate2, gate3, gate4]  #Slot 0 has no lock
 
 def create_obj(x_pos):
@@ -250,7 +254,7 @@ while running:
 
             #Bird physics
             velocity += gravity  #Gravity works as long as game is running
-            clipped_velocity = np.clip(velocity, -100, 1)  #Clip velocity so the gravity is more controlled
+            clipped_velocity = np.clip(velocity, -1.5, 1)  #Clip velocity so the gravity is more controlled
             y += clipped_velocity  #Speed of bird is stored in velocity to make jump smoother
 
             if y < 0: #Prevent falling off the screen
@@ -342,10 +346,19 @@ while running:
 
         #Draw the selected bird
         if selected_skin == 0:
-            #Animated pigeon if slot 0 is selected
+            #Animated pigeon
             pigeon_img = pigeon_frames[frame_index]
+        elif selected_skin == 1:
+            #Animated bird1
+            pigeon_img = bird1[frame_index]
+        #elif selected_skin == 2:
+            # Animated bird2
+            #pigeon_img = bird2[frame_index]
+        elif selected_skin == 3:
+            # Animated bird3
+            pigeon_img = bird3[frame_index]
         else:
-            #Static bird from shop selection
+            #Static birds (bird2, bird4)
             pigeon_img = static_birds[selected_skin - 1]
 
         screen.blit(pygame.transform.scale(pigeon_img, (BirdWidth, BirdHeight)), (x, y))
