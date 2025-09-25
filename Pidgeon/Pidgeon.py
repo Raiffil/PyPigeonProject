@@ -68,7 +68,7 @@ unlocked_slots = [True, False, False, False, False]  #Slot 0 always unlocked
 #lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
 lock_costs = [0, 1, 1, 1, 1]  #Temp debug costs
 
-#Objects (pipes)
+#Objects (rockets)
 obj_width = 100
 min_gap = 200
 max_gap = 350
@@ -154,8 +154,14 @@ gate1 = load_gate1()
 gate2 = load_gate2()
 gate3 = load_gate3()
 gate4 = load_gate4()
-obj_image = pygame.image.load("Rocket.png").convert_alpha()
 
+rocket_image = pygame.image.load("Rocket.png").convert_alpha()
+rocket_width, rocket_height = rocket_image.get_size()
+#Pre-scale the rocket image once to correct width
+scaled_rocket = pygame.transform.scale(
+    rocket_image, (obj_width, int(rocket_height * (obj_width / rocket_width)))
+)
+scaled_rocket_width, scaled_rocket_height = scaled_rocket.get_size()
 
 #Variables tied to functions
 static_birds = [bird1[0], bird2, bird3[0], bird4] #Static images used in shop
@@ -296,6 +302,29 @@ while running:
                 obj['top_rect'] = top_obj
                 obj['bottom_rect'] = bottom_obj
 
+                #Calculate heights
+                top_height = obj['gap_y']
+                bottom_height = WinHeight - (obj['gap_y'] + obj['gap_size'])
+
+                # Take from the TOP of the rocket image
+                bottom_crop = scaled_rocket.subsurface(
+                    (0, 0, scaled_rocket_width, min(bottom_height, scaled_rocket_height))
+                )
+
+                # Take from the BOTTOM of the rocket image
+                top_crop = scaled_rocket.subsurface(
+                    (0, scaled_rocket_height - min(top_height, scaled_rocket_height),
+                     scaled_rocket_width, min(top_height, scaled_rocket_height))
+                )
+
+                #Flip the top rocket vertically
+                top_rocket = pygame.transform.flip(top_crop, False, True)
+                bottom_rocket = bottom_crop
+
+                #No need to re-scale (already width-scaled)
+                obj['top_rocket'] = top_crop
+                obj['bottom_rocket'] = bottom_crop
+
             #Replace objects list with surviving objects
             objects = new_obj
 
@@ -331,10 +360,9 @@ while running:
         screen.blit(background,(0,0))
 
         #Draw objects
-        obj_color = (255, 255, 255)
         for obj in objects:
-            pygame.draw.rect(screen, obj_color, obj['top_rect'])
-            pygame.draw.rect(screen, obj_color, obj['bottom_rect'])
+            screen.blit(obj['top_rocket'], (obj['x'], 0))
+            screen.blit(obj['bottom_rocket'], (obj['x'], obj['gap_y'] + obj['gap_size']))
 
         #Draw stars
         for star in stars:
