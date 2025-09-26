@@ -9,7 +9,7 @@ from Skins import load_background
 from Skins import load_restart_image
 from Skins import load_star_image
 from Skins import load_shop_image
-from Skins import load_bird1_frames, load_bird2, load_bird3_frames, load_bird4
+from Skins import load_bird1_frames, load_bird2_frames, load_bird3_frames, load_bird4_frames
 from Skins import load_gate1, load_gate2, load_gate3, load_gate4
 
 #Initialize pygame
@@ -64,9 +64,9 @@ star_chance = 0.4   #Chance a star spawns in a gap
 stars = []          #Active star list
 
 #Lock gates in shop
-unlocked_slots = [True, False, False, False, False]  #Slot 0 always unlocked
-#lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
-lock_costs = [0, 1, 1, 1, 1]  #Temp debug costs
+unlocked_slots = [True, False, False, False, False]  #Slot 0 is always unlocked
+lock_costs = [0, 10, 20, 30, 40]  #Stardust cost per slot
+#lock_costs = [0, 1, 1, 1, 1]  #Temp debug costs
 
 #Objects (rockets)
 obj_width = 100
@@ -105,11 +105,11 @@ shop_menu_btn = pygame.Rect(185, 620, 420, 140)
 
 #Skin selection slots in shop
 skin_slots = [
-    pygame.Rect(195, 392, 200, 200),  # Slot 0: pigeon
-    pygame.Rect(420, 392, 200, 200),  # Slot 1: bird1
-    pygame.Rect(645, 392, 200, 200),  # Slot 2: bird2
-    pygame.Rect(875, 392, 200, 200),  # Slot 3: bird3
-    pygame.Rect(1100, 392, 200, 200)  # Slot 4: bird4
+    pygame.Rect(195, 392, 200, 200),  #Slot 0: Pigeon
+    pygame.Rect(420, 392, 200, 200),  #Slot 1: Dove
+    pygame.Rect(645, 392, 200, 200),  #Slot 2: Parrot
+    pygame.Rect(875, 392, 200, 200),  #Slot 3: Raven
+    pygame.Rect(1100, 392, 200, 200)  #Slot 4: Zombie
 ]
 
 # Preview slot for currently selected skin
@@ -146,26 +146,25 @@ star_image = load_star_image()
 stardust = load_stardust()
 shop_image = load_shop_image()
 bird1 = load_bird1_frames()
-#bird2 = load_bird2_frames()
-bird2 = load_bird2()
+bird2 = load_bird2_frames()
 bird3 = load_bird3_frames()
-bird4 = load_bird4()
+bird4 = load_bird4_frames()
 gate1 = load_gate1()
 gate2 = load_gate2()
 gate3 = load_gate3()
 gate4 = load_gate4()
 
+#Variables tied to functions
+static_birds = [bird1[0], bird2[0], bird3[0], bird4[0]] #Static images used in shop
+lock_images = [None, gate1, gate2, gate3, gate4]  #Slot 0 has no lock
+
+#Rocket image
 rocket_image = pygame.image.load("Rocket.png").convert_alpha()
 rocket_width, rocket_height = rocket_image.get_size()
 #Pre-scale the rocket image once to correct width
 scaled_rocket = pygame.transform.scale(
-    rocket_image, (obj_width, int(rocket_height * (obj_width / rocket_width)))
-)
+    rocket_image, (obj_width, int(rocket_height * (obj_width / rocket_width))))
 scaled_rocket_width, scaled_rocket_height = scaled_rocket.get_size()
-
-#Variables tied to functions
-static_birds = [bird1[0], bird2, bird3[0], bird4] #Static images used in shop
-lock_images = [None, gate1, gate2, gate3, gate4]  #Slot 0 has no lock
 
 def create_obj(x_pos):
     gap_size = random.randint(min_gap, max_gap)  #Space the bird can fly through
@@ -298,30 +297,19 @@ while running:
                 if obj['x'] + obj_width > -50:
                     new_obj.append(obj)
 
-                #Save rects inside the object so they can be drawn after the background
-                obj['top_rect'] = top_obj
-                obj['bottom_rect'] = bottom_obj
-
                 #Calculate heights
                 top_height = obj['gap_y']
                 bottom_height = WinHeight - (obj['gap_y'] + obj['gap_size'])
 
-                # Take from the TOP of the rocket image
+                #Take from the TOP of the rocket image
                 bottom_crop = scaled_rocket.subsurface(
-                    (0, 0, scaled_rocket_width, min(bottom_height, scaled_rocket_height))
-                )
+                    (0, 0, scaled_rocket_width, min(bottom_height, scaled_rocket_height)))
 
-                # Take from the BOTTOM of the rocket image
+                #Take from the BOTTOM of the rocket image
                 top_crop = scaled_rocket.subsurface(
                     (0, scaled_rocket_height - min(top_height, scaled_rocket_height),
-                     scaled_rocket_width, min(top_height, scaled_rocket_height))
-                )
+                     scaled_rocket_width, min(top_height, scaled_rocket_height)))
 
-                #Flip the top rocket vertically
-                top_rocket = pygame.transform.flip(top_crop, False, True)
-                bottom_rocket = bottom_crop
-
-                #No need to re-scale (already width-scaled)
                 obj['top_rocket'] = top_crop
                 obj['bottom_rocket'] = bottom_crop
 
@@ -374,20 +362,17 @@ while running:
 
         #Draw the selected bird
         if selected_skin == 0:
-            #Animated pigeon
             pigeon_img = pigeon_frames[frame_index]
         elif selected_skin == 1:
-            #Animated bird1
             pigeon_img = bird1[frame_index]
-        #elif selected_skin == 2:
-            # Animated bird2
-            #pigeon_img = bird2[frame_index]
+        elif selected_skin == 2:
+            pigeon_img = bird2[frame_index]
         elif selected_skin == 3:
-            # Animated bird3
             pigeon_img = bird3[frame_index]
+        elif selected_skin == 4:
+            pigeon_img = bird4[frame_index]
         else:
-            #Static birds (bird2, bird4)
-            pigeon_img = static_birds[selected_skin - 1]
+            print("skin selection problem")
 
         screen.blit(pygame.transform.scale(pigeon_img, (BirdWidth, BirdHeight)), (x, y))
 

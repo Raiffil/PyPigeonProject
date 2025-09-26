@@ -56,8 +56,12 @@ def load_bird1_frames():
         frames.append(frame)
     return frames
 
-def load_bird2():
-    return pygame.image.load("bird2.png").convert_alpha()
+def load_bird2_frames():
+    frames = []
+    for i in range(1, 5):
+        frame = pygame.image.load(f"Bird2_F{i}.png").convert_alpha()
+        frames.append(frame)
+    return frames
 
 def load_bird3_frames():
     frames = []
@@ -66,9 +70,12 @@ def load_bird3_frames():
         frames.append(frame)
     return frames
 
-def load_bird4():
-    return pygame.image.load("bird4.png").convert_alpha()
-
+def load_bird4_frames():
+    frames = []
+    for i in range(1, 5):
+        frame = pygame.image.load(f"Bird4_F{i}.png").convert_alpha()
+        frames.append(frame)
+    return frames
 
 def load_gate1():
     return pygame.image.load("gate1.png").convert_alpha()
